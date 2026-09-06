@@ -7,6 +7,7 @@
   dpkg,
   autoPatchelfHook,
   makeShellWrapper,
+  nodejs,
   wrapGAppsHook3,
   alsa-lib,
   atk,
@@ -19,6 +20,7 @@
   gdk-pixbuf,
   git,
   glib,
+  glibc,
   gtk3,
   libdrm,
   libgbm,
@@ -107,6 +109,7 @@ let
       autoPatchelfHook
       dpkg
       makeShellWrapper
+      nodejs
       wrapGAppsHook3
     ];
 
@@ -166,6 +169,14 @@ let
 
     sourceRoot = ".";
     dontWrapGApps = true;
+
+    # Avoid detect-libc's process.report fallback, which crashes Electron's
+    # repository watcher on NixOS when /usr/bin/ldd does not exist.
+    postPatch = ''
+      node ${./patch-ldd-path.cjs} \
+        "$PWD/usr/lib/chatgpt/resources/app.asar" \
+        "${lib.getBin glibc}/bin/ldd"
+    '';
 
     installPhase = ''
       runHook preInstall
